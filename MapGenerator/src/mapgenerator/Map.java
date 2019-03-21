@@ -51,7 +51,7 @@ public class Map {
                 break;
             case 4:
                 mapSize = 31;
-                centerBaseMinSize = 20;
+                centerBaseMinSize = 30;
                 normalBaseMinSize = 10;
                 break;
             default:
@@ -76,7 +76,6 @@ public class Map {
        
         //populate the base with the center and it's neighbors
         base.add(center);
-        System.out.println("adding first neighbors");
         for(Tile tile : getAllNonBaseNeighbors(center)){
             tile.setType(BASE);
             base.add(tile);
@@ -85,7 +84,6 @@ public class Map {
         int iteration = 0;
         int maxAttempts = 1000;
         while(base.size() <= centerBaseMinSize && iteration < maxAttempts){
-            System.out.println("while iteration: " + iteration + " base size: " + base.size());
             ArrayList<Tile> newBaseTiles = new ArrayList<>();
             for(Tile tile : base){
                 Tile growTile = getRandom(getAllNonBaseNeighbors(tile));
@@ -99,14 +97,8 @@ public class Map {
             }
             for(Tile tile : newBaseTiles){ base.add(tile); };
             iteration++;
-        }/*
-        //override map with base
-        for(Tile tile : base){
-            int x = tile.getX();
-            int y = tile.getY();
-            map.get(x).set(y, tile);
-        }*/
-        System.out.println("center base created");
+        }
+        //wall around the base except the exits
     }
     
     private void createBase(Tile center){

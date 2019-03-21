@@ -1,5 +1,7 @@
 package mapgenerator;
 
+import static mapgenerator.TileType.*;
+
 /**
  *
  * @author Mads S. Mogensen
@@ -7,7 +9,10 @@ package mapgenerator;
 public class Tile {
     private int x;
     private int y;
-    private TileType type;
+    private TileType type = UNDEFINED;
+    
+    //used for base growing
+    private int lives = 3;
     
     public Tile(int x, int y){
         this.x = x;
@@ -36,6 +41,18 @@ public class Tile {
 
     public void setType(TileType type) {
         this.type = type;
+    }
+
+    public int getLives() {
+        return lives;
+    }
+
+    public void setLives(int lives) {
+        this.lives = lives;
+    }
+    
+    public void looseLife(){
+        this.lives--;
     }
     
 }

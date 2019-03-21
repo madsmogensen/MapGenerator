@@ -1,7 +1,8 @@
 package mapgenerator;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+import static mapgenerator.TileType.*;
 
 /**
  *
@@ -22,29 +23,41 @@ public class Map {
     private ArrayList<ArrayList<Tile>> map = new ArrayList<>();
     private int mapSize; //length and/or width of the map
     private int numberOfPlayers;
+    private int centerBaseMinSize;
+    private int normalBaseMinSize;
     
     //Constructor Method for Map
     public Map(int players){
-        numberOfPlayers = players;
-        setMapSize(players);
+        this.numberOfPlayers = players;
+        setMapSize(numberOfPlayers);
         
         createEmptyMap(); //done
-        createCenterBase();
+        Tile center = getTile(mapSize/2,mapSize/2);
+        center.setType(BASE);
+        createCenterBase(center);
     }
     
     private void setMapSize(int players){
         switch(players){
             case 2:
-                mapSize = 10;
+                mapSize = 11;
+                centerBaseMinSize = 10;
+                normalBaseMinSize = 10;
                 break;
             case 3:
-                mapSize = 20;
+                mapSize = 21;
+                centerBaseMinSize = 15;
+                normalBaseMinSize = 10;
                 break;
             case 4:
-                mapSize = 30;
+                mapSize = 31;
+                centerBaseMinSize = 20;
+                normalBaseMinSize = 10;
                 break;
             default:
-                mapSize = 30;
+                mapSize = 31;
+                centerBaseMinSize = 10;
+                normalBaseMinSize = 10;
         }      
     }
     
@@ -58,7 +71,45 @@ public class Map {
         }
     }
     
-    private void createCenterBase(){
+    private void createCenterBase(Tile center){
+        ArrayList<Tile> base = new ArrayList<>();
+       
+        //populate the base with the center and it's neighbors
+        base.add(center);
+        System.out.println("adding first neighbors");
+        for(Tile tile : getAllNonBaseNeighbors(center)){
+            tile.setType(BASE);
+            base.add(tile);
+        }
+        //grow base untill at least desired size
+        int iteration = 0;
+        int maxAttempts = 1000;
+        while(base.size() <= centerBaseMinSize && iteration < maxAttempts){
+            System.out.println("while iteration: " + iteration + " base size: " + base.size());
+            ArrayList<Tile> newBaseTiles = new ArrayList<>();
+            for(Tile tile : base){
+                Tile growTile = getRandom(getAllNonBaseNeighbors(tile));
+                if(growTile != null && !base.contains(growTile)){
+                    growTile.looseLife();
+                    if(growTile.getLives() <= 0){
+                        growTile.setType(BASE);
+                        newBaseTiles.add(growTile);
+                    }
+                }
+            }
+            for(Tile tile : newBaseTiles){ base.add(tile); };
+            iteration++;
+        }/*
+        //override map with base
+        for(Tile tile : base){
+            int x = tile.getX();
+            int y = tile.getY();
+            map.get(x).set(y, tile);
+        }*/
+        System.out.println("center base created");
+    }
+    
+    private void createBase(Tile center){
         
     }
     
@@ -66,9 +117,48 @@ public class Map {
         return map.get(x).get(y);
     }
     
+    private Tile getRandom(ArrayList<Tile> neighbors){
+        if(neighbors.size() > 0){
+            int i = ThreadLocalRandom.current().nextInt(0, neighbors.size()); //actual size not included
+            return neighbors.get(i);
+        }
+        return null; //no neighbors that aren't already part of a base
+    }
+    
+    private ArrayList<Tile> getAllNonBaseNeighbors(Tile center){
+        ArrayList<Tile> neighbors = new ArrayList<>();
+        for(int i = -1; i < 2; i++){
+            for(int j = -1; j < 2; j++){
+                Tile tile = getTile(center.getX()+i,center.getY()+j);
+                if(!tile.equals(center)){
+                    if(!tile.getType().equals(BASE)){
+                        neighbors.add(tile);
+                    }
+                }
+            }
+        }
+        return neighbors;
+    }
+    
+    private ArrayList<Tile> getAdjecentNeighbors(Tile center){
+        return null;
+    }
     
     
-    
-    
+    public void print(){
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < map.size(); i++){
+            for(int j = 0; j < map.size(); j++){
+                Tile tile = map.get(i).get(j);
+                if(tile.getType().equals(BASE)){
+                    sb.append("# ");
+                }else{
+                    sb.append(tile.getLives()+" ");
+                }
+            }
+            sb.append("\n");
+        }
+        System.out.println(sb.toString());
+    }
 }
 
